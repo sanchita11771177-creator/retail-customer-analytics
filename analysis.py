@@ -1,0 +1,20 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+df=pd.read_csv("data/retail_sales.csv",parse_dates=["order_date"]).drop_duplicates("order_id")
+df["month"]=df.order_date.dt.to_period("M").astype(str)
+print("Total revenue:",round(df.revenue.sum(),2))
+print("Orders:",df.order_id.nunique())
+print("Customers:",df.customer_id.nunique())
+print("Average order value:",round(df.groupby("order_id").revenue.sum().mean(),2))
+print("\nCategory performance:")
+print(df.groupby("category").agg(revenue=("revenue","sum"),units=("quantity","sum"),orders=("order_id","nunique")).sort_values("revenue",ascending=False))
+print("\nTop products:")
+print(df.groupby("product").revenue.sum().sort_values(ascending=False).head(10))
+print("\nCity performance:")
+print(df.groupby("city").revenue.sum().sort_values(ascending=False))
+os.makedirs("dashboard",exist_ok=True)
+m=df.groupby("month").revenue.sum()
+plt.figure(figsize=(9,5)); m.plot(marker="o"); plt.title("Monthly Revenue"); plt.xlabel("Month"); plt.ylabel("Revenue"); plt.xticks(rotation=45); plt.tight_layout(); plt.savefig("dashboard/monthly_revenue.png"); plt.close()
+c=df.groupby("category").revenue.sum().sort_values()
+plt.figure(figsize=(8,5)); c.plot(kind="barh"); plt.title("Revenue by Category"); plt.xlabel("Revenue"); plt.tight_layout(); plt.savefig("dashboard/category_revenue.png"); plt.close()
